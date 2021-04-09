@@ -120,5 +120,73 @@ namespace ToDoBot.Utilities
         }
         // </AddItemsToContainerAsync>
 
+        public async Task<List<ToDoTask>> QueryItemsAsync(string userId, string EndpointUri, string PrimaryKey, string databaseId, string containerId, string partitionKey)
+        {
+            await GetStartedAsync(EndpointUri, PrimaryKey, databaseId, containerId, partitionKey);
+
+            var sqlQueryText = $"SELECT * FROM c WHERE c.id = '{userId}' ORDER BY c._ts DESC";
+
+            Console.WriteLine("Running query: {0}\n", sqlQueryText);
+
+            QueryDefinition queryDefinition = new QueryDefinition(sqlQueryText);
+            FeedIterator<ToDoTask> queryResultSetIterator = this.container.GetItemQueryIterator<ToDoTask>(queryDefinition);
+
+            List<ToDoTask> todoTasks = new List<ToDoTask>();
+
+            while (queryResultSetIterator.HasMoreResults)
+            {
+                FeedResponse<ToDoTask> currentResultSet = await queryResultSetIterator.ReadNextAsync();
+                foreach (ToDoTask todoTask in currentResultSet)
+                {
+                    todoTasks.Add(todoTask);
+                    Console.WriteLine("\tRead {0}\n", todoTask);
+                }
+            }
+            return todoTasks;
+        }
+
+        public async Task<List<ToDoTask>> QueryItemsAsync(string userId)
+        {
+            var sqlQueryText = $"SELECT * FROM c WHERE c.id = '{userId}' ORDER BY c._ts ASC";
+
+            Console.WriteLine("Running query: {0}\n", sqlQueryText);
+
+            QueryDefinition queryDefinition = new QueryDefinition(sqlQueryText);
+            FeedIterator<ToDoTask> queryResultSetIterator = this.container.GetItemQueryIterator<ToDoTask>(queryDefinition);
+
+            List<ToDoTask> todoTasks = new List<ToDoTask>();
+
+            while (queryResultSetIterator.HasMoreResults)
+            {
+                FeedResponse<ToDoTask> currentResultSet = await queryResultSetIterator.ReadNextAsync();
+                foreach (ToDoTask todoTask in currentResultSet)
+                {
+                    todoTasks.Add(todoTask);
+                    Console.WriteLine("\tRead {0}\n", todoTask);
+                }
+            }
+            return todoTasks;
+        }
+
+        public async Task<bool> DeleteTaskItemAsync(string partitionKey, string id)
+        {
+            var partitionKeyValue = partitionKey;
+            var userId = id;
+
+            try
+            {
+                // Delete an item. Note we must provide the partition key value and id of the item to delete
+                ItemResponse<ToDoTask> todoTaskResponse = await this.container.DeleteItemAsync<ToDoTask>(userId, new PartitionKey(partitionKeyValue));
+                Console.WriteLine("Deleted ToDoTask [{0},{1}]\n", partitionKeyValue, userId);
+                return true;
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return false;              
+            }
+            
+        }
+
     }
 }

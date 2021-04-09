@@ -43,8 +43,8 @@ namespace ToDoBot.Dialogs
             AddDialog(new TextPrompt(UserValidationDialogID, UserValidation));
             AddDialog(new ChoicePrompt(nameof(ChoicePrompt)));
             AddDialog(new CreateTaskDialog(_cosmosDBClient));
-            AddDialog(new ViewTaskDialog());
-            AddDialog(new DeleteTaskDialog());
+            AddDialog(new ViewTaskDialog(Configuration, _cosmosDBClient));
+            AddDialog(new DeleteTaskDialog(_cosmosDBClient));
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
             {
                 UserExistsStepAsync,
